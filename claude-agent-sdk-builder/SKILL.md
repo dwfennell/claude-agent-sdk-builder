@@ -18,6 +18,86 @@ This skill provides comprehensive guidance for building agents with the Claude A
 - Implementing hooks for safety and permissions
 - Managing multi-turn conversations and sessions
 
+## Helper Scripts
+
+This skill includes powerful scripts to automate common tasks:
+
+### init-agent-project.sh - Project Scaffolding
+
+Quickly create a new agent project from templates:
+
+```bash
+./scripts/init-agent-project.sh
+```
+
+The script will:
+- Prompt for project name
+- Let you choose a template (basic-agent, custom-tools, in-code-subagent, full-app)
+- Copy template files
+- Create `.env` and `.gitignore`
+- Initialize git repository
+- Install dependencies
+- Create workspace directory
+
+### generate-tool.ts - Custom Tool Generator
+
+Generate boilerplate for new custom tools:
+
+```bash
+bun run scripts/generate-tool.ts
+```
+
+Interactive prompts for:
+- Tool name and description
+- Parameters with types and descriptions
+- Generates complete TypeScript code with Zod schemas
+
+### generate-subagent.ts - Subagent Config Generator
+
+Generate in-code subagent configurations:
+
+```bash
+bun run scripts/generate-subagent.ts
+```
+
+Creates:
+- Factory function or class-based subagent
+- Proper TypeScript types
+- System prompt template
+- Tool selection
+- Usage examples
+
+### validate-agent-config.ts - Configuration Validator
+
+Validate agent configuration before running:
+
+```bash
+bun run scripts/validate-agent-config.ts config.ts
+```
+
+Checks for:
+- Tool name typos and case sensitivity
+- Missing MCP servers
+- Invalid tool references
+- Subagent configuration errors
+- Common mistakes
+
+### add-hooks.ts - Hooks Generator
+
+Generate common hook patterns:
+
+```bash
+bun run scripts/add-hooks.ts
+```
+
+Available templates:
+- File path validation
+- Command allowlist
+- File type restrictions
+- Rate limiting
+- Logging hooks
+- Environment-based restrictions
+
 ## Quick Start Workflow
 
 ### Step 1: Choose Your Starting Point
@@ -376,7 +456,21 @@ Detailed guides available in `references/`:
 
 ## Template Usage
 
-### Basic Agent
+### Quick Start (Recommended)
+
+Use the automated project scaffolder:
+
+```bash
+./scripts/init-agent-project.sh
+```
+
+This interactive script will guide you through creating a new project from any template.
+
+### Manual Template Copy
+
+Alternatively, copy templates manually:
+
+#### Basic Agent
 
 ```bash
 cp -r assets/templates/basic-agent ./my-agent
@@ -385,7 +479,7 @@ npm install
 npm start
 ```
 
-### Custom Tools
+#### Custom Tools
 
 ```bash
 cp -r assets/templates/custom-tools ./my-agent
@@ -394,7 +488,7 @@ npm install
 npm start "Calculate 5 + 3 times 2"
 ```
 
-### In-Code Subagents
+#### In-Code Subagents
 
 ```bash
 cp -r assets/templates/in-code-subagent ./my-agent
@@ -403,7 +497,7 @@ npm install
 npm start
 ```
 
-### Full Production App
+#### Full Production App
 
 ```bash
 cp -r assets/templates/full-app ./my-agent
