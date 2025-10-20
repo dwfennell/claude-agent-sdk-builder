@@ -255,219 +255,98 @@ Complete application with:
 
 See `assets/templates/full-app/README.md` for details.
 
-## Custom Tools Guide
+## Creating Custom Tools
 
-### Creating Tools
+Custom tools extend agent capabilities with domain-specific functionality. Use `tool()` with Zod schemas to define parameters, then bundle into MCP servers with `createSdkMcpServer()`.
 
-Use the `tool()` function with Zod schemas:
+**Key Points:**
+- Tool naming format: `mcp__<server-name>__<tool-name>`
+- Define parameters with Zod for type safety
+- Return format: `{ content: [{ type: "text", text: "..." }] }`
 
+**Quick Example:**
 ```typescript
-import { tool } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
-
-const myTool = tool(
-  "tool_name",                    // Name
-  "What the tool does",           // Description
-  {
-    param1: z.string().describe("First parameter"),
-    param2: z.number().optional()
-  },                              // Schema
-  async (args) => {               // Handler
-    const result = await performOperation(args);
-    return {
-      content: [{ type: "text", text: JSON.stringify(result) }]
-    };
-  }
-);
+const myTool = tool("tool_name", "Description", {
+  param: z.string()
+}, async (args) => ({
+  content: [{ type: "text", text: "Result" }]
+}));
 ```
 
-### Creating MCP Servers
+**Generator:** Use `bun run scripts/generate-tool.ts` to create tool boilerplate.
 
-Bundle tools into servers:
+**Full Guide:** See `references/custom-tools-guide.md` for:
+- Complete tool creation examples
+- MCP server configuration
+- Real-world patterns (email, database, API integration)
+- Error handling and testing
 
-```typescript
-import { createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
+## Configuring In-Code Subagents
 
-const server = createSdkMcpServer({
-  name: "server-name",
-  version: "1.0.0",
-  tools: [tool1, tool2, tool3]
-});
-```
+**Preferred Approach:** Define subagents programmatically in code rather than markdown files for better type safety, testing, and dynamic configuration.
 
-### Using in Agents
+**Key Patterns:**
+- **Factory functions** - Reusable config generators
+- **Class-based** - For complex subagents with state
+- **Dynamic** - Adjust behavior based on runtime conditions
 
-```typescript
-options: {
-  mcpServers: {
-    "myserver": server
-  },
-  allowedTools: [
-    "mcp__myserver__tool1",
-    "mcp__myserver__tool2"
-  ]
-}
-```
+**Spawning:** Main agent uses `Task` tool with `subagent_type` parameter.
 
-**Tool Naming**: Format is `mcp__<server-name>__<tool-name>`
+**Benefits over Markdown:**
+- Type safety (catch errors at compile time)
+- Dynamic configuration (adjust at runtime)
+- Better testing and code reuse
 
-For detailed examples and patterns, see `references/custom-tools-guide.md`.
+**Generator:** Use `bun run scripts/generate-subagent.ts` for boilerplate.
 
-## In-Code Subagents Guide (Recommended)
+**Full Guide:** See `references/in-code-subagents.md` for:
+- Factory and class-based patterns
+- Spawning and orchestration
+- Multi-level subagents
+- Context passing and error handling
 
-### Factory Pattern
+## Implementing Safety Hooks
 
-```typescript
-function createSubagent(type: string) {
-  return {
-    name: `${type}-specialist`,
-    description: `Specialized in ${type} tasks`,
-    tools: ["Read", "Write"],
-    systemPrompt: `You are a ${type} specialist...`,
-    maxTurns: 15
-  };
-}
+Hooks intercept tool execution for validation, permissions, and safety. Use `PreToolUse` hooks to block unsafe operations before they execute.
 
-const subagents = [
-  createSubagent("search"),
-  createSubagent("analysis")
-];
-```
+**Common Use Cases:**
+- File path validation (restrict to specific directories)
+- Command allowlisting (only safe bash commands)
+- Environment-based restrictions (dev vs prod)
+- Rate limiting and logging
 
-### Class-Based Pattern
+**Hook Return:**
+- Allow: `{ continue: true }`
+- Block: `{ decision: 'block', stopReason: '...', continue: false }`
 
-```typescript
-class SubagentFactory {
-  constructor(private context: ProjectContext) {}
+**Generator:** Use `bun run scripts/add-hooks.ts` for common patterns.
 
-  createSearcher() {
-    return {
-      name: "searcher",
-      tools: ["Grep", "Glob"],
-      systemPrompt: this.buildPrompt(),
-      maxTurns: 10
-    };
-  }
+**Full Guide:** See `references/hooks-guide.md` for:
+- Complete hook examples
+- Real-world patterns (workspace safety, file types, rate limiting)
+- Testing hooks
+- PostToolUse hooks
 
-  private buildPrompt() {
-    return `Search in ${this.context.projectRoot}...`;
-  }
-}
-```
+## Managing Sessions
 
-### Spawning Subagents
+Multi-turn conversations require capturing and resuming session state. Capture `session_id` from system init messages and use `resume` option for subsequent turns.
 
-Main agent uses Task tool:
+**Basic Pattern:**
+1. Capture `session_id` from first `system` message
+2. Use `resume: sessionId` option for follow-up queries
+3. Session persists conversation context
 
-```typescript
-appendSystemPrompt: `
-  You have specialized subagents available:
-  - searcher: Find and analyze files
-  - analyzer: Analyze code quality
+**Production Patterns:**
+- Session classes for encapsulation
+- WebSocket streaming for real-time updates
+- Database persistence for session data
+- Cleanup strategies for inactive sessions
 
-  To delegate tasks, use:
-  Task({
-    subagent_type: "searcher",
-    description: "Find TypeScript files",
-    prompt: "Locate all .ts files in src/"
-  })
-`
-```
-
-For complete examples and patterns, see `references/in-code-subagents.md`.
-
-## Hooks for Safety
-
-### PreToolUse Hooks
-
-Validate or block tool execution:
-
-```typescript
-hooks: {
-  PreToolUse: [
-    {
-      matcher: "Write|Edit",  // Regex pattern
-      hooks: [
-        async (input) => {
-          const filePath = input.tool_input.file_path;
-
-          // Validate path is in allowed directory
-          if (!filePath.startsWith('/workspace')) {
-            return {
-              decision: 'block',
-              stopReason: 'Files must be in /workspace',
-              continue: false
-            };
-          }
-
-          return { continue: true };
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Common Hook Patterns
-
-- **File path validation** - Restrict to specific directories
-- **Command allowlisting** - Only allow safe bash commands
-- **Environment-based** - Different rules for dev/prod
-- **Rate limiting** - Prevent rapid tool execution
-- **Logging** - Track all tool usage
-
-See `references/hooks-guide.md` for detailed examples.
-
-## Session Management
-
-### Multi-Turn Conversations
-
-```typescript
-let sessionId: string | null = null;
-
-// First message
-for await (const message of query({ prompt: "Hello", options })) {
-  if (message.type === 'system' && message.subtype === 'init') {
-    sessionId = message.session_id;
-  }
-}
-
-// Continue conversation
-const resumeOptions = { ...options, resume: sessionId };
-for await (const message of query({
-  prompt: "Follow-up question",
-  options: resumeOptions
-})) {
-  // Handle messages
-}
-```
-
-### Session Class Pattern
-
-```typescript
-class ConversationSession {
-  private sessionId: string | null = null;
-
-  async *sendMessage(prompt: string, options: any) {
-    const queryOptions = this.sessionId
-      ? { ...options, resume: this.sessionId }
-      : options;
-
-    for await (const message of query({ prompt, options: queryOptions })) {
-      if (message.type === 'system' && message.subtype === 'init') {
-        this.sessionId = message.session_id;
-      }
-      yield message;
-    }
-  }
-
-  reset() {
-    this.sessionId = null;
-  }
-}
-```
-
-See `references/session-patterns.md` for production patterns with WebSocket streaming, database persistence, and error handling.
+**Full Guide:** See `references/session-patterns.md` for:
+- Multi-turn conversation patterns
+- Streaming to WebSocket, console, or React
+- SessionManager class for production
+- Error handling and retry patterns
 
 ## Reference Documentation
 
