@@ -449,10 +449,30 @@ See `references/session-patterns.md` for production patterns with WebSocket stre
 Detailed guides available in `references/`:
 
 - **sdk-api-reference.md** - Complete API reference for query(), options, message types
+  - Search: `grep "query()" references/sdk-api-reference.md` for query function details
+  - Search: `grep "tool()" references/sdk-api-reference.md` for custom tool creation
+  - Search: `grep "ClaudeAgentOptions" references/sdk-api-reference.md` for configuration options
+  - Search: `grep "Multi-Turn" references/sdk-api-reference.md` for session management
+
 - **custom-tools-guide.md** - Creating tools, MCP servers, tool patterns
+  - Search: `grep "createSdkMcpServer" references/custom-tools-guide.md` for MCP server creation
+  - Search: `grep "Zod" references/custom-tools-guide.md` for parameter schema examples
+  - Search: `grep "Real-World Examples" references/custom-tools-guide.md` for complete tool examples
+
 - **in-code-subagents.md** - Programmatic subagent configuration (preferred approach)
+  - Search: `grep "Factory" references/in-code-subagents.md` for factory pattern examples
+  - Search: `grep "Class-Based" references/in-code-subagents.md` for class-based patterns
+  - Search: `grep "Spawning" references/in-code-subagents.md` for Task tool delegation
+
 - **hooks-guide.md** - PreToolUse and PostToolUse hooks for safety
+  - Search: `grep "PreToolUse" references/hooks-guide.md` for pre-execution hooks
+  - Search: `grep "File Path" references/hooks-guide.md` for path validation examples
+  - Search: `grep "Command Allowlist" references/hooks-guide.md` for bash restrictions
+
 - **session-patterns.md** - Session management, streaming, multi-turn, production patterns
+  - Search: `grep "Multi-Turn" references/session-patterns.md` for conversation patterns
+  - Search: `grep "WebSocket" references/session-patterns.md` for streaming examples
+  - Search: `grep "SessionManager" references/session-patterns.md` for production patterns
 
 ## Template Usage
 
