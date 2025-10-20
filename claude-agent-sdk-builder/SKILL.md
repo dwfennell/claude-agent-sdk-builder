@@ -18,6 +18,31 @@ This skill provides comprehensive guidance for building agents with the Claude A
 - Implementing hooks for safety and permissions
 - Managing multi-turn conversations and sessions
 
+## Prerequisites
+
+To use this skill and build Claude Agent SDK applications, ensure the following are installed:
+
+**Required:**
+- **Node.js 18+** or **Bun runtime** - For running TypeScript/JavaScript code
+- **npm** or **bun** - Package manager for installing dependencies
+- **Git** - For version control and using init-agent-project.sh script
+
+**Optional but Recommended:**
+- **TypeScript** - For type checking and better development experience
+- **Anthropic API Key** - Required to run agents (get from [console.anthropic.com](https://console.anthropic.com))
+
+**Verify Installation:**
+```bash
+node --version  # Should be 18.0.0 or higher
+npm --version
+git --version
+```
+
+Or with Bun:
+```bash
+bun --version
+```
+
 ## Helper Scripts
 
 This skill includes powerful scripts to automate common tasks:
